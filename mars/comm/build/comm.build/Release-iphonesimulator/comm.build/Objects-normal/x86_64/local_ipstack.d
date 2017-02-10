@@ -1,0 +1,15 @@
+dependencies: /Users/xingjian/work/mars/mars/comm/socket/local_ipstack.cc \
+  /Users/xingjian/work/mars/mars/comm/socket/local_ipstack.h \
+  /Users/xingjian/work/mars/mars/comm/xlogger/xlogger.h \
+  /Users/xingjian/work/mars/mars/comm/xlogger/xloggerbase.h \
+  /Users/xingjian/work/mars/mars/comm/xlogger/preprocessor.h \
+  /Users/xingjian/work/mars/mars/comm/socket/unix_socket.h \
+  /Users/xingjian/work/mars/mars/comm/network/getifaddrs.h \
+  /Users/xingjian/work/mars/mars/comm/network/getgateway.h \
+  /Users/xingjian/work/mars/mars/comm/network/getdnssvraddrs.h \
+  /Users/xingjian/work/mars/mars/comm/../comm/socket/socket_address.h \
+  /Users/xingjian/work/mars/mars/comm/platform_comm.h \
+  /Users/xingjian/work/mars/mars/comm/../../mars/comm/thread/mutex.h \
+  /Users/xingjian/work/mars/mars/comm/../../mars/comm/thread/../unix/thread/mutex.h \
+  /Users/xingjian/work/mars/mars/comm/../comm/assert/__assert.h \
+  /Users/xingjian/work/mars/mars/comm/../comm/time_utils.h
