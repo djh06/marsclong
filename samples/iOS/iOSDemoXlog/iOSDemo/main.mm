@@ -46,7 +46,17 @@ int main(int argc, char * argv[]) {
         xlogger_SetLevel(kLevelInfo);
         appender_set_console_log(false);
 #endif
-        appender_open(kAppednerAsync, [logPath UTF8String], "Test");
+        
+        
+        XLoggerAppInfo info ;
+        info.biz = "123";
+        info.osv = "123";
+        info.plat = "123";
+        info.qid = "234234";
+        info.sid = "2342342";
+        info.uid = "123312";
+        info.version = "234234";
+        appender_open(kAppednerAsync, [logPath UTF8String], "Test",&info);
         
         return UIApplicationMain(argc, argv, nil, NSStringFromClass([AppDelegate class]));
     }

@@ -53,7 +53,17 @@ typedef struct XLoggerInfo_t {
     intmax_t tid;
     intmax_t maintid;
 } XLoggerInfo;
-
+    
+typedef struct XLoggerAppInfo_t {
+    const char* biz;
+    const char* plat;
+    const char* osv;
+    const char* version;
+    const char* qid;
+    const char* uid;
+    const char* sid;
+}XLoggerAppInfo;
+    
 extern intmax_t xlogger_pid();
 extern intmax_t xlogger_tid();
 extern intmax_t xlogger_maintid();

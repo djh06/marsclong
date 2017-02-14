@@ -186,6 +186,11 @@ static void __make_logfilename(const timeval& _tv, const std::string& _logdir, c
     _filepath[_len - 1] = '\0';
 }
 
+static std::string __make_uoloadURL(){
+
+    std::string url = std::string(LOG_SERVER_URL);
+    return url;
+}
 
 static bool __push_logfile2vec(std::string filepath){
     bool pathexist = false;
@@ -860,7 +865,7 @@ static void __tick_time_delfile(){
     __del_timeout_timifile();
 }
 
-void appender_open(TAppenderMode _mode, const char* _dir, const char* _nameprefix) {
+void appender_open(TAppenderMode _mode, const char* _dir, const char* _nameprefix,const XLoggerAppInfo* appinfo) {
 	assert(_dir);
 	assert(_nameprefix);
     
@@ -966,7 +971,7 @@ void appender_open_with_cache(TAppenderMode _mode, const std::string& _cachedir,
         Thread(boost::bind(&__move_old_files, _cachedir, _logdir, std::string(_nameprefix))).start_after(3 * 60 * 1000);
     }
 
-    appender_open(_mode, _logdir.c_str(), _nameprefix);
+    appender_open(_mode, _logdir.c_str(), _nameprefix,NULL);
 
 }
 
