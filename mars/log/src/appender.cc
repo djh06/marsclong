@@ -188,7 +188,7 @@ static void __make_logfilename(const timeval& _tv, const std::string& _logdir, c
     _filepath[_len - 1] = '\0';
 }
 
-static std::string __make_uoloadURL(){
+static std::string __make_uploadURL(){
     
     std:: string blank = std::string("");
     std::string url = std::string(LOG_SERVER_URL);
@@ -199,14 +199,16 @@ static std::string __make_uoloadURL(){
     std::string uid = sg_app.uid == NULL ? blank : std::string(sg_app.uid);
     std::string version = sg_app.version == NULL ? blank : std::string(sg_app.version);
     std::string osv =  sg_app.osv == NULL ? blank : std::string(sg_app.osv);
+    std::string channelid = sg_app.channelid == NULL ? blank : std::string(sg_app.channelid);
     
     url += biz.length() <= 0 ? "" : "biz="+ biz;
-    url += plat.length() <= 0 ? "" : "plat="+ plat;
-    url += qid.length() <= 0 ? "" : "qid="+ qid;
-    url += sid.length() <= 0 ? "" : "sid="+ sid;
-    url += uid.length() <= 0 ? "" : "uid="+ uid;
-    url += version.length() <= 0 ? "" : "version="+ version;
-    url += osv.length() <= 0 ? "" : "osv="+ osv;
+    url += plat.length() <= 0 ? "" : "&plat="+ plat;
+    url += qid.length() <= 0 ? "" : "&qid="+ qid;
+    url += sid.length() <= 0 ? "" : "&sid="+ sid;
+    url += uid.length() <= 0 ? "" : "&uid="+ uid;
+    url += version.length() <= 0 ? "" : "&version="+ version;
+    url += osv.length() <= 0 ? "" : "&osv="+ osv;
+    url += channelid.length() <= 0 ? "" : "&channelid="+ channelid;
     return url;
 }
 
@@ -454,7 +456,7 @@ static bool __make_curl_handel(std::string filepath){
         bool succuss = false;
         if(curl) {
             
-            std::string url =  __make_uoloadURL();
+            std::string url =  __make_uploadURL();
             printf("<======= url = %s ",url.c_str());
             
             curl_easy_setopt(curl, CURLOPT_URL,LOG_SERVER_URL);
@@ -904,6 +906,7 @@ void appender_open(TAppenderMode _mode, const char* _dir, const char* _nameprefi
         sg_app.qid = appinfo->qid;
         sg_app.sid = appinfo->sid;
         sg_app.uid = appinfo->uid;
+        sg_app.channelid = appinfo->channelid;
         sg_app.version = appinfo->version;
     }
     
