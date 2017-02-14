@@ -189,31 +189,24 @@ static void __make_logfilename(const timeval& _tv, const std::string& _logdir, c
 }
 
 static std::string __make_uoloadURL(){
-
+    
+    std:: string blank = std::string("");
     std::string url = std::string(LOG_SERVER_URL);
-    std::string biz = std::string(sg_app.biz);
-    std::string plat = std::string(sg_app.plat);
-    std::string qid =  std::string(sg_app.qid);
-    std::string sid =  std::string(sg_app.sid);
-    std::string uid =  std::string(sg_app.uid);
-    std::string version = std::string(sg_app.version);
-    std::string osv =  std::string(sg_app.osv);
+    std::string biz = sg_app.biz == NULL ? blank :std::string(sg_app.biz);
+    std::string plat = sg_app.plat == NULL ? blank :  std::string(sg_app.plat);
+    std::string qid = sg_app.qid == NULL ? blank : std::string(sg_app.qid);
+    std::string sid = sg_app.sid == NULL ? blank : std::string(sg_app.sid);
+    std::string uid = sg_app.uid == NULL ? blank : std::string(sg_app.uid);
+    std::string version = sg_app.version == NULL ? blank : std::string(sg_app.version);
+    std::string osv =  sg_app.osv == NULL ? blank : std::string(sg_app.osv);
     
-    url += "biz=";
-    url += biz;
-    url += "&plat=";
-    url += plat;
-    url += "&qid";
-    url += qid;
-    url += "&sid=";
-    url += sid;
-    url += "&uid=";
-    url += uid;
-    url += "&version=";
-    url += version;
-    url += "&osv=";
-    url += osv;
-    
+    url += biz.length() <= 0 ? "" : "biz="+ biz;
+    url += plat.length() <= 0 ? "" : "plat="+ plat;
+    url += qid.length() <= 0 ? "" : "qid="+ qid;
+    url += sid.length() <= 0 ? "" : "sid="+ sid;
+    url += uid.length() <= 0 ? "" : "uid="+ uid;
+    url += version.length() <= 0 ? "" : "version="+ version;
+    url += osv.length() <= 0 ? "" : "osv="+ osv;
     return url;
 }
 
@@ -904,13 +897,15 @@ void appender_open(TAppenderMode _mode, const char* _dir, const char* _nameprefi
         return;
     }
     
-    sg_app.biz = appinfo->biz;
-    sg_app.osv = appinfo->osv;
-    sg_app.plat = appinfo->plat;
-    sg_app.qid = appinfo->qid;
-    sg_app.sid = appinfo->sid;
-    sg_app.uid = appinfo->uid;
-    sg_app.version = appinfo->version;
+    if (appinfo) {
+        sg_app.biz = appinfo->biz;
+        sg_app.osv = appinfo->osv;
+        sg_app.plat = appinfo->plat;
+        sg_app.qid = appinfo->qid;
+        sg_app.sid = appinfo->sid;
+        sg_app.uid = appinfo->uid;
+        sg_app.version = appinfo->version;
+    }
     
     xlogger_SetAppender(&xlogger_appender);
     
