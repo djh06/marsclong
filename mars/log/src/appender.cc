@@ -80,7 +80,7 @@
 
 #define LOG_EXT "xlog"
 #define LOG_EXTENSION ".timi"
-#define LOG_SERVER_URL "http://api.nohttp.net/upload"
+#define LOG_SERVER_URL "http://api.nohttp.net/upload?"
 
 extern void log_formater(const XLoggerInfo* _info, const char* _logbody, PtrBuffer& _log);
 extern void ConsoleLog(const XLoggerInfo* _info, const char* _log);
@@ -138,6 +138,8 @@ static Timer* timer = NULL;
 
 static std::vector<std::string> sg_uploadfiles;
 
+static XLoggerAppInfo sg_app;
+
 namespace {
 class ScopeErrno {
   public:
@@ -189,6 +191,29 @@ static void __make_logfilename(const timeval& _tv, const std::string& _logdir, c
 static std::string __make_uoloadURL(){
 
     std::string url = std::string(LOG_SERVER_URL);
+    std::string biz = std::string(sg_app.biz);
+    std::string plat = std::string(sg_app.plat);
+    std::string qid =  std::string(sg_app.qid);
+    std::string sid =  std::string(sg_app.sid);
+    std::string uid =  std::string(sg_app.uid);
+    std::string version = std::string(sg_app.version);
+    std::string osv =  std::string(sg_app.osv);
+    
+    url += "biz=";
+    url += biz;
+    url += "&plat=";
+    url += plat;
+    url += "&qid";
+    url += qid;
+    url += "&sid=";
+    url += sid;
+    url += "&uid=";
+    url += uid;
+    url += "&version=";
+    url += version;
+    url += "&osv=";
+    url += osv;
+    
     return url;
 }
 
@@ -435,6 +460,10 @@ static bool __make_curl_handel(std::string filepath){
         curl = curl_easy_init();
         bool succuss = false;
         if(curl) {
+            
+            std::string url =  __make_uoloadURL();
+            printf("<======= url = %s ",url.c_str());
+            
             curl_easy_setopt(curl, CURLOPT_URL,LOG_SERVER_URL);
             curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
             curl_easy_setopt(curl, CURLOPT_READDATA, fd);
@@ -874,7 +903,15 @@ void appender_open(TAppenderMode _mode, const char* _dir, const char* _nameprefi
         __writetips2file("appender has already been opened. _dir:%s _nameprefix:%s", _dir, _nameprefix);
         return;
     }
-
+    
+    sg_app.biz = appinfo->biz;
+    sg_app.osv = appinfo->osv;
+    sg_app.plat = appinfo->plat;
+    sg_app.qid = appinfo->qid;
+    sg_app.sid = appinfo->sid;
+    sg_app.uid = appinfo->uid;
+    sg_app.version = appinfo->version;
+    
     xlogger_SetAppender(&xlogger_appender);
     
 	//mkdir(_dir, S_IRWXU|S_IRWXG|S_IRWXO);

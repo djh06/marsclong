@@ -24,7 +24,7 @@
 #include <string>
 #include <vector>
 
-extern struct XLoggerAppInfo_t;
+struct XLoggerAppInfo_t;
 
 enum TAppenderMode
 {
