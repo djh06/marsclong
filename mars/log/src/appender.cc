@@ -68,7 +68,7 @@
 #include "mars/comm/mmap_util.h"
 #include "mars/comm/tickcount.h"
 #include "mars/comm/verinfo.h"
-#include "mars/comm/timer.hpp"
+
 #ifdef ANDROID
 #include "mars/comm/iOS/curl/inc/curl/curl.h"
 #else
@@ -101,15 +101,18 @@ static Mutex sg_mutex_buffer_async;
 #ifdef _WIN32
 static Condition& sg_cond_buffer_async = *(new Condition());  // 改成引用, 避免在全局释放时执行析构导致crash
 static Condition& sg_cond_curl_async = *(new Condition());
+static Condition& sg_cond_timer_async = *(new Condition());
 #else
 static Condition sg_cond_buffer_async;
 static Condition sg_cond_curl_async;
+static Condition sg_cond_timer_async;
 #endif
 
 static LogBuffer* sg_log_buff = NULL;
 
 static volatile bool sg_log_close = true;
 static volatile bool sg_curl_close = true;
+static volatile bool sg_timer_close = true;
 
 static Tss sg_tss_dumpfile(&free);
 
@@ -121,9 +124,11 @@ static bool sg_consolelog_open = false;
 
 static void __async_log_thread();
 static void __async_curl_thread();
+static void __async_timer_thread();
 
 static Thread sg_thread_async(&__async_log_thread);
 static Thread sg_curl_thread_async(&__async_curl_thread);
+static Thread sg_timer_thread_async(&__async_timer_thread);
 
 static const unsigned int kBufferBlockLength = 1*1024;
 static const long kMaxLogAliveTime = 5 * 60;	// 5 mins
@@ -133,8 +138,6 @@ static const long KTickSecond = 5*60*1000;
 static std::string sg_log_extra_msg;
 
 static boost::iostreams::mapped_file sg_mmmap_file;
-
-static Timer* timer = NULL;
 
 static std::vector<std::string> sg_uploadfiles;
 
@@ -726,6 +729,21 @@ static void __async_curl_thread(){
     }
 }
 
+static void __async_timer_thread(){
+
+    bool firstexcu = true;
+    while (true) {
+        if (!firstexcu) {
+            __del_timeout_timifile();
+        }
+        firstexcu = false;
+        if (sg_timer_close) {
+            break;
+        }
+        sg_cond_timer_async.wait(KTickSecond);
+    }
+}
+
 static void __appender_sync(const XLoggerInfo* _info, const char* _log) {
 
     char temp[16 * 1024] = {0};     // tell perry,ray if you want modify size.
@@ -969,6 +987,7 @@ void appender_open(TAppenderMode _mode, const char* _dir, const char* _nameprefi
 	sg_logfileprefix = _nameprefix;
 	sg_log_close = false;
     sg_curl_close = false;
+    sg_timer_close = false;
 	appender_setmode(_mode);
     lock.unlock();
     
@@ -1006,8 +1025,6 @@ void appender_open(TAppenderMode _mode, const char* _dir, const char* _nameprefi
 
 	BOOT_RUN_EXIT(appender_close);
     
-    timer = new Timer();
-    timer->StartTimer(KTickSecond, std::bind(__tick_time_delfile));
 }
 
 
@@ -1053,11 +1070,6 @@ void appender_flush_sync() {
 }
 
 void appender_close() {
-    if (timer) {
-        timer->Expire();
-        delete timer;
-        timer = NULL;
-    }
     
     if (sg_log_close) return;
 
@@ -1069,16 +1081,24 @@ void appender_close() {
 
     sg_log_close = true;
     sg_curl_close = true;
+    sg_timer_close = true;
 
     sg_cond_buffer_async.notifyAll();
-    sg_cond_curl_async.notifyAll();
+
     if (sg_thread_async.isruning())
         sg_thread_async.join();
     
+    sg_cond_curl_async.notifyAll();
+ 
     if (sg_curl_thread_async.isruning()) {
         sg_curl_thread_async.join();
     }
 	
+    sg_cond_timer_async.notifyAll();
+    if (sg_timer_thread_async.isruning()) {
+        sg_timer_thread_async.join();
+    }
+    
     ScopedLock buffer_lock(sg_mutex_buffer_async);
     if (sg_mmmap_file.is_open()) {
         if (!sg_mmmap_file.operator !()) memset(sg_mmmap_file.data(), 0, kBufferBlockLength);

@@ -288,7 +288,6 @@
 		4FCB62D91A30802600E57EE0 /* basepacker.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = basepacker.cc; sourceTree = "<group>"; };
 		4FCB62DA1A30802600E57EE0 /* basepacker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = basepacker.h; sourceTree = "<group>"; };
 		558C681D1C05C5AF00C06D77 /* socket_address.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = socket_address.cc; path = socket/socket_address.cc; sourceTree = "<group>"; };
-		C9C20C781E4C9EAE00F08170 /* timer.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = timer.hpp; sourceTree = "<group>"; };
 		C9C20C7D1E4D8B7F00F08170 /* curl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = curl.h; sourceTree = "<group>"; };
 		C9C20C7E1E4D8B7F00F08170 /* curlbuild.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = curlbuild.h; sourceTree = "<group>"; };
 		C9C20C801E4D8B7F00F08170 /* curlrules.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = curlrules.h; sourceTree = "<group>"; };
@@ -816,7 +815,6 @@
 			isa = PBXGroup;
 			children = (
 				C9C20C7A1E4D8B6D00F08170 /* cul */,
-				C9C20C781E4C9EAE00F08170 /* timer.hpp */,
 				F1F050FD1E08E56E007DB6DB /* coroutine */,
 				1FDCDCA11DAA70B700ADAE56 /* http.cc */,
 				1FDCDCA21DAA70B700ADAE56 /* http.h */,

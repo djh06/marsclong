@@ -9,14 +9,10 @@
 #ifndef timer_h
 #define timer_h
 
-#include <stdio.h>
-#include<functional>
-#include<chrono>
-#include<thread>
-#include<atomic>
-#include<memory>
-#include<mutex>
-#include<condition_variable>
+#include "boost/thread.hpp"
+#include "boost/function.hpp"
+#include "boost/utility/result_of.hpp"
+
 
 class Timer{
 
@@ -33,18 +29,18 @@ public:
         Expire();
     }
     
-    void StartTimer(int interval, std::function<void()> task){
+    void StartTimer(int interval, boost::function<void()> task){
         if (expired_ == false){
             return;
         }
         expired_ = false;
-        std::thread([this, interval, task](){
+        boost::thread([this, interval, task](){
             while (!try_to_expire_){
-                std::this_thread::sleep_for(std::chrono::milliseconds(interval));
+                boost::this_thread::sleep_for(boost::chrono::milliseconds(interval));
                 task();
             }
             {
-                std::lock_guard<std::mutex> locker(mutex_);
+                boost::lock_guard<boost::mutex> locker(mutex_);
                 expired_ = true;
                 expired_cond_.notify_one();
             }
@@ -65,7 +61,7 @@ public:
         }
         try_to_expire_ = true;
         {
-            std::unique_lock<std::mutex> locker(mutex_);
+            boost::unique_lock<boost::mutex> locker(mutex_);
             expired_cond_.wait(locker, [this]{return expired_ == true; });
             if (expired_ == true){
                 try_to_expire_ = false;
@@ -76,27 +72,27 @@ public:
     template<typename callable, class... arguments>
     void SyncWait(int after, callable&& f, arguments&&... args){
         
-        std::function<typename std::result_of<callable(arguments...)>::type()> task
-        (std::bind(std::forward<callable>(f), std::forward<arguments>(args)...));
-        std::this_thread::sleep_for(std::chrono::milliseconds(after));
+        boost::function<typename boost::result_of<callable(arguments...)>::type()> task
+        (boost::bind(boost::forward<callable>(f), boost::forward<arguments>(args)...));
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(after));
         task();
     }
     template<typename callable, class... arguments>
     void AsyncWait(int after, callable&& f, arguments&&... args){
-        std::function<typename std::result_of<callable(arguments...)>::type()> task
-        (std::bind(std::forward<callable>(f), std::forward<arguments>(args)...));
+        boost::function<typename boost::result_of<callable(arguments...)>::type()> task
+        (boost::bind(boost::forward<callable>(f), boost::forward<arguments>(args)...));
         
-        std::thread([after, task](){
-            std::this_thread::sleep_for(std::chrono::milliseconds(after));
+        boost::thread([after, task](){
+            boost::this_thread::sleep_for(boost::chrono::milliseconds(after));
             task();
         }).detach();
     }
     
 private:
-    std::atomic<bool> expired_;
-    std::atomic<bool> try_to_expire_;
-    std::mutex mutex_;
-    std::condition_variable expired_cond_;
+    boost::atomic<bool> expired_;
+    boost::atomic<bool> try_to_expire_;
+    boost::mutex mutex_;
+    boost::condition_variable expired_cond_;
 };
 
 #endif /* timer_h */
