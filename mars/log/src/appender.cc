@@ -923,9 +923,6 @@ static void get_mark_info(char* _info, size_t _infoLen) {
 	snprintf(_info, _infoLen, "[%" PRIdMAX ",%" PRIdMAX "][%s]", xlogger_pid(), xlogger_tid(), tmp_time);
 }
 
-static void __tick_time_delfile(){
-    __del_timeout_timifile();
-}
 
 void appender_open(TAppenderMode _mode, const char* _dir, const char* _nameprefix,const XLoggerAppInfo* appinfo) {
 	assert(_dir);
@@ -1127,6 +1124,10 @@ void appender_setmode(TAppenderMode _mode) {
     
     if (!sg_curl_thread_async.isruning()) {
         sg_curl_thread_async.start();
+    }
+    
+    if (!sg_timer_thread_async.isruning()) {
+        sg_timer_thread_async.start();
     }
 }
 
