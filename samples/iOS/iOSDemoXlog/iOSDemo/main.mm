@@ -56,7 +56,7 @@ int main(int argc, char * argv[]) {
         info.sid = "2342342";
         info.uid = "123312";
         info.version = "234234";
-        appender_open(kAppednerAsync, [logPath UTF8String], "Test",NULL);
+        appender_open(kAppednerAsync, [logPath UTF8String], "Test",&info);
         
         return UIApplicationMain(argc, argv, nil, NSStringFromClass([AppDelegate class]));
     }

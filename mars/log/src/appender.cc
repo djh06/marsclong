@@ -80,7 +80,7 @@
 
 #define LOG_EXT "xlog"
 #define LOG_EXTENSION ".timi"
-#define LOG_SERVER_URL "http://api.nohttp.net/upload"
+#define LOG_SERVER_URL "http://api.nohttp.net/upload?"
 
 extern void log_formater(const XLoggerInfo* _info, const char* _logbody, PtrBuffer& _log);
 extern void ConsoleLog(const XLoggerInfo* _info, const char* _log);
@@ -204,14 +204,15 @@ static std::string __make_uploadURL(){
     std::string osv =  sg_app.osv == NULL ? blank : std::string(sg_app.osv);
     std::string channelid = sg_app.channelid == NULL ? blank : std::string(sg_app.channelid);
     
-    url += biz.length() <= 0 ? "" : "biz="+ biz;
-    url += plat.length() <= 0 ? "" : "&plat="+ plat;
-    url += qid.length() <= 0 ? "" : "&qid="+ qid;
-    url += sid.length() <= 0 ? "" : "&sid="+ sid;
-    url += uid.length() <= 0 ? "" : "&uid="+ uid;
-    url += version.length() <= 0 ? "" : "&version="+ version;
-    url += osv.length() <= 0 ? "" : "&osv="+ osv;
-    url += channelid.length() <= 0 ? "" : "&channelid="+ channelid;
+    url += biz.length() <= 0 ? "" : "biz="+ std::string(curl_escape(biz.c_str(), biz.length()));
+    url += plat.length() <= 0 ? "" : "&plat="+ std::string(curl_escape(plat.c_str(), plat.length()));
+    url += qid.length() <= 0 ? "" : "&qid="+ std::string(curl_escape(qid.c_str(), qid.length()));
+    url += sid.length() <= 0 ? "" : "&sid="+ std::string(curl_escape(sid.c_str(), sid.length()));
+;
+    url += uid.length() <= 0 ? "" : "&uid="+ std::string(curl_escape(uid.c_str(), uid.length()));
+    url += version.length() <= 0 ? "" : "&version="+ std::string(curl_escape(version.c_str(), version.length()));
+    url += osv.length() <= 0 ? "" : "&osv="+ std::string(curl_escape(osv.c_str(), osv.length()));
+    url += channelid.length() <= 0 ? "" : "&channelid="+ std::string(curl_escape(channelid.c_str(), channelid.length()));
     return url;
 }
 
@@ -478,7 +479,8 @@ static bool __make_curl_handel(std::string filepath){
         if(curl) {
             
             std::string url =  __make_uploadURL();
-            printf("<======= url = %s ",url.c_str());
+            
+            printf("url = %s",url.c_str());
             
             curl_easy_setopt(curl, CURLOPT_URL,LOG_SERVER_URL);
             curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postfile);
