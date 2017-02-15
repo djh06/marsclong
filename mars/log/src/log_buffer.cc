@@ -48,12 +48,11 @@ bool LogBuffer::Write(const void* _data, size_t _inputlen, void* _output, size_t
     }
     
     s_log_crypt->CryptSyncLog((char*)_data, _inputlen, (char*)_output, _len);
-    
     return true;
 }
 
-LogBuffer::LogBuffer(void* _pbuffer, size_t _len, bool _isCompress)
-: is_compress_(_isCompress) {
+LogBuffer::LogBuffer(void* _pbuffer, size_t _len, bool _isCompress, bool _isCrypt)
+: is_compress_(_isCompress), is_crypt_(_isCrypt) {
     buff_.Attach(_pbuffer, _len);
     __Fix();
 
@@ -77,9 +76,11 @@ void LogBuffer::Flush(AutoBuffer& _buff) {
         deflateEnd(&cstream_);
     }
 
-    if (s_log_crypt->GetLogLen((char*)buff_.Ptr(), buff_.Length()) == 0){
-        __Clear();
-        return;
+    if (is_crypt_) {
+        if (s_log_crypt->GetLogLen((char*)buff_.Ptr(), buff_.Length()) == 0){
+            __Clear();
+            return;
+        }
     }
     
     __Flush();
@@ -100,6 +101,7 @@ bool LogBuffer::Write(const void* _data, size_t _length) {
     size_t before_len = buff_.Length();
     size_t write_len = _length;
     
+    is_compress_ = false;
     if (is_compress_) {
         cstream_.avail_in = (uInt)_length;
         cstream_.next_in = (Bytef*)_data;
@@ -118,23 +120,26 @@ bool LogBuffer::Write(const void* _data, size_t _length) {
     }
     
 
-    char crypt_buffer[4096] = {0};
-    size_t crypt_buffer_len = sizeof(crypt_buffer);
+    if (is_crypt_) {
     
+        char crypt_buffer[4096] = {0};
+        size_t crypt_buffer_len = sizeof(crypt_buffer);
+        
+        
+        s_log_crypt->CryptAsyncLog((char*)buff_.Ptr() + before_len, write_len, crypt_buffer, crypt_buffer_len);
+        
+        uint16_t single_log_len = crypt_buffer_len;
+        buff_.Write(&single_log_len, sizeof(single_log_len), before_len);
+        
+        before_len += sizeof(single_log_len);
+        buff_.Write(crypt_buffer, crypt_buffer_len, before_len);
+        
+        before_len += crypt_buffer_len;
+        buff_.Length(before_len, before_len);
+        
+        s_log_crypt->UpdateLogLen((char*)buff_.Ptr(), (uint32_t)crypt_buffer_len + sizeof(single_log_len));
+    }
     
-    s_log_crypt->CryptAsyncLog((char*)buff_.Ptr() + before_len, write_len, crypt_buffer, crypt_buffer_len);
-    
-    uint16_t single_log_len = crypt_buffer_len;
-    buff_.Write(&single_log_len, sizeof(single_log_len), before_len);
-    
-    before_len += sizeof(single_log_len);
-    buff_.Write(crypt_buffer, crypt_buffer_len, before_len);
-    
-    before_len += crypt_buffer_len;
-    buff_.Length(before_len, before_len);
-   
-    s_log_crypt->UpdateLogLen((char*)buff_.Ptr(), (uint32_t)crypt_buffer_len + sizeof(single_log_len));
-
     return true;
 }
 
@@ -153,19 +158,24 @@ bool LogBuffer::__Reset() {
         
     }
     
-    s_log_crypt->SetHeaderInfo((char*)buff_.Ptr(), is_compress_);
-    buff_.Length(s_log_crypt->GetHeaderLen(), s_log_crypt->GetHeaderLen());
+    if (is_crypt_) {
+        s_log_crypt->SetHeaderInfo((char*)buff_.Ptr(), is_compress_);
+        buff_.Length(s_log_crypt->GetHeaderLen(), s_log_crypt->GetHeaderLen());
+    }
+
 
     return true;
 }
 
 void LogBuffer::__Flush() {
-    assert(buff_.Length() >= s_log_crypt->GetHeaderLen());
     
-    s_log_crypt->UpdateLogHour((char*)buff_.Ptr());
-    s_log_crypt->SetTailerInfo((char*)buff_.Ptr() + buff_.Length());
-    buff_.Length(buff_.Length() + s_log_crypt->GetTailerLen(), buff_.Length() + s_log_crypt->GetTailerLen());
-
+    if (is_crypt_) {
+        assert(buff_.Length() >= s_log_crypt->GetHeaderLen());
+        
+        s_log_crypt->UpdateLogHour((char*)buff_.Ptr());
+        s_log_crypt->SetTailerInfo((char*)buff_.Ptr() + buff_.Length());
+        buff_.Length(buff_.Length() + s_log_crypt->GetTailerLen(), buff_.Length() + s_log_crypt->GetTailerLen());
+    }
 }
 
 void LogBuffer::__Clear() {
@@ -175,12 +185,16 @@ void LogBuffer::__Clear() {
 
 
 void LogBuffer::__Fix() {
-    uint32_t raw_log_len = 0;
-    if (s_log_crypt->Fix((char*)buff_.Ptr(), buff_.Length(), is_compress_, raw_log_len)) {
-        buff_.Length(raw_log_len + s_log_crypt->GetHeaderLen(), raw_log_len + s_log_crypt->GetHeaderLen());
-    } else {
+    if (is_crypt_) {
+        uint32_t raw_log_len = 0;
+        if (s_log_crypt->Fix((char*)buff_.Ptr(), buff_.Length(), is_compress_, raw_log_len)) {
+            buff_.Length(raw_log_len + s_log_crypt->GetHeaderLen(), raw_log_len + s_log_crypt->GetHeaderLen());
+        } else {
+            buff_.Length(0, 0);
+        }
+   
+    }else{
         buff_.Length(0, 0);
     }
-
 }
 

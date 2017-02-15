@@ -417,6 +417,7 @@ static bool __writefile(const void* _data, size_t _len, FILE* _file) {
 
         __writetips2console("write file error:%d", err);
 
+        return false;
 
         ftruncate(fileno(_file), before_len);
         fseek(_file, 0, SEEK_END);
@@ -487,7 +488,8 @@ static void __upload_logfile(){
         printf("file name =>> %s",logfile.c_str());
         sg_uploadfiles.pop_back();
         if (__make_curl_handel(logfile)) {
-            boost::filesystem::remove(logfile);
+            bool delok =   boost::filesystem::remove(logfile);
+            printf(" error = %d",delok);
         }
     }
 }

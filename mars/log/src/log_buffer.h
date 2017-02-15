@@ -31,7 +31,7 @@ class LogCrypt;
 
 class LogBuffer {
 public:
-    LogBuffer(void* _pbuffer, size_t _len, bool _is_compress);
+    LogBuffer(void* _pbuffer, size_t _len, bool _is_compress,bool _is_crypt=false);
     ~LogBuffer();
     
 public:
@@ -56,6 +56,7 @@ private:
 private:
     PtrBuffer buff_;
     bool is_compress_;
+    bool is_crypt_;
     z_stream cstream_;
     
     static class LogCrypt* s_log_crypt;
