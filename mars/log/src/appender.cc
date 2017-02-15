@@ -80,7 +80,7 @@
 
 #define LOG_EXT "xlog"
 #define LOG_EXTENSION ".timi"
-#define LOG_SERVER_URL "http://api.nohttp.net/upload?"
+#define LOG_SERVER_URL "http://api.nohttp.net/upload"
 
 extern void log_formater(const XLoggerInfo* _info, const char* _logbody, PtrBuffer& _log);
 extern void ConsoleLog(const XLoggerInfo* _info, const char* _log);
@@ -450,8 +450,25 @@ static bool __make_curl_handel(std::string filepath){
         if(!fd)
             return false;
         
-        if(fstat(fileno(fd), &file_info) != 0)
-            return 1;
+        if(fstat(fileno(fd), &file_info) != 0){
+            fclose(fd);
+            return false;
+        }
+        
+        char* postfile = NULL;
+        fseek( fd , 0L , SEEK_END);
+        long  lSize = ftell( fd );
+        rewind( fd );
+        postfile = (char*)calloc( 1, lSize+1 );
+        if (!postfile) {
+            fclose(fd);
+            return false;
+        }
+        
+        if( 1!=fread( postfile , lSize, 1 , fd) ){
+            fclose(fd);
+            return false;
+        }
         
         curl = curl_easy_init();
         bool succuss = false;
@@ -461,9 +478,8 @@ static bool __make_curl_handel(std::string filepath){
             printf("<======= url = %s ",url.c_str());
             
             curl_easy_setopt(curl, CURLOPT_URL,LOG_SERVER_URL);
-            curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
-            curl_easy_setopt(curl, CURLOPT_READDATA, fd);
-            curl_easy_setopt(curl, CURLOPT_INFILESIZE_LARGE,(curl_off_t)file_info.st_size);
+            curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postfile);
+            curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)strlen(postfile));
             curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
             curl_easy_setopt(curl, CURLOPT_TIMEOUT, 8);
     
@@ -475,6 +491,7 @@ static bool __make_curl_handel(std::string filepath){
             curl_easy_cleanup(curl);
         }
         fclose(fd);
+        delete postfile;
         return succuss;
         
     }else{
@@ -487,6 +504,7 @@ static void __upload_logfile(){
         std::string logfile = sg_uploadfiles[sg_uploadfiles.size()-1];
         printf("file name =>> %s",logfile.c_str());
         sg_uploadfiles.pop_back();
+        
         if (__make_curl_handel(logfile)) {
             bool delok =   boost::filesystem::remove(logfile);
             printf(" error = %d",delok);
