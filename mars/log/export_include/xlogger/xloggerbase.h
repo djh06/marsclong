@@ -36,6 +36,8 @@ typedef enum {
     kLevelWarn,     // Other runtime situations that are undesirable or unexpected, but not necessarily "wrong".
     kLevelError,    // Other runtime errors or unexpected conditions.
     kLevelFatal,    // Severe errors that cause premature termination.
+    kLevelMonitor,  // App and Server performance
+    KLevelBusiness, // App Business log
     kLevelNone,     // Special level used to disable all log messages.
 } TLogLevel;
 
@@ -51,7 +53,18 @@ typedef struct XLoggerInfo_t {
     intmax_t tid;
     intmax_t maintid;
 } XLoggerInfo;
-
+    
+typedef struct XLoggerAppInfo_t {
+    const char* biz;
+    const char* plat;
+    const char* osv;
+    const char* version;
+    const char* qid;
+    const char* uid;
+    const char* sid;
+    const char* channelid;
+}XLoggerAppInfo;
+    
 extern intmax_t xlogger_pid();
 extern intmax_t xlogger_tid();
 extern intmax_t xlogger_maintid();

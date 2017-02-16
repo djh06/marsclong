@@ -69,8 +69,10 @@
 #include "mars/comm/tickcount.h"
 #include "mars/comm/verinfo.h"
 
+#include "mars/comm/xlogger/android_xlog.h"
+
 #ifdef ANDROID
-#include "mars/comm/iOS/curl/inc/curl/curl.h"
+#include "mars/comm/android/curl/include/curl/curl.h"
 #else
 #include "mars/comm/iOS/curl/inc/curl/curl.h"
 #endif
@@ -479,8 +481,8 @@ static bool __make_curl_handel(std::string filepath){
         if(curl) {
             
             std::string url =  __make_uploadURL();
-            
-            printf("url = %s",url.c_str());
+
+            //LOGD("testxlog","<======= ur = %s ",url.c_str());
             
             curl_easy_setopt(curl, CURLOPT_URL,LOG_SERVER_URL);
             curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postfile);
@@ -567,6 +569,7 @@ static bool __openlogfile(const std::string& _log_dir) {
         
         char uploadfile[1024] = {0};
         __make_uploadfilename(tv, _log_dir, uploadfile, 1024);
+        LOGD("testxlog","<===uploadfilename====>");
         boost::filesystem::rename(logfilepath, uploadfile);
         // todo upload and del this file
         if (__push_logfile2vec(uploadfile)) {
@@ -937,7 +940,7 @@ void appender_open(TAppenderMode _mode, const char* _dir, const char* _nameprefi
     }
     
     if (appinfo) {
-        sg_app.biz = appinfo->biz;
+        // sg_app.biz = appinfo->biz;
         sg_app.osv = appinfo->osv;
         sg_app.plat = appinfo->plat;
         sg_app.qid = appinfo->qid;
