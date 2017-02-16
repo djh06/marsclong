@@ -80,7 +80,7 @@
 
 #define LOG_EXT "xlog"
 #define LOG_EXTENSION ".timi"
-#define LOG_SERVER_URL "http://api.nohttp.net/upload?"
+#define LOG_SERVER_URL "http://api.nohttp.net/upload"
 
 extern void log_formater(const XLoggerInfo* _info, const char* _logbody, PtrBuffer& _log);
 extern void ConsoleLog(const XLoggerInfo* _info, const char* _log);
