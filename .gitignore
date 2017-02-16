@@ -16,3 +16,13 @@ mars/comm/libs
 verinfo.h
 mars/openssl/libs
 mars/openssl/obj
+mars/libraries/mars_android_sdk/libs
+mars_utils.pyc
+decode_mars_log_file.py.rewriteme
+mars/libraries/mars_xlog_sdk/mars_libs
+mars/libraries/mars_xlog_sdk/so_cache
+gradlew
+gradlew.bat
+mars_xlog_sdk.iml
+local.properties
+xlogSample.iml
