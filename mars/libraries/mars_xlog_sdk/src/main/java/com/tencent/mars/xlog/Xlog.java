@@ -25,6 +25,16 @@ public class Xlog implements Log.LogImp {
 		public long maintid;
 	}
 
+    static class XLoggerAppInfo{
+        public String platform;
+        public String osVersion;
+        public String version;
+        public String qid;
+        public String uid;
+        public String sid;
+        public String channelId;
+    }
+
 	public static void open(boolean isLoadLib, int level, int mode, String cacheDir, String logDir, String nameprefix) {
 		if (isLoadLib) {
 			System.loadLibrary("stlport_shared");
@@ -84,7 +94,7 @@ public class Xlog implements Log.LogImp {
 
 	public static native void setErrLogOpen(boolean isOpen);	//set whether the  prints err log into a separate file
 
-	public static native void appenderOpen(int level, int mode, String cacheDir, String logDir, String nameprefix);
+	public static native void appenderOpen(int level, int mode, String cacheDir, String logDir, String nameprefix, XLoggerAppInfo appInfo);
 
 	@Override
 	public native void appenderClose();

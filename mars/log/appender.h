@@ -24,7 +24,9 @@
 #include <string>
 #include <vector>
 
-extern struct XLoggerAppInfo_t;
+#include "mars/comm/xlogger/xloggerbase.h"
+
+// extern struct XLoggerAppInfo_t;
 
 enum TAppenderMode
 {

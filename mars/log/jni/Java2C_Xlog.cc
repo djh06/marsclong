@@ -16,6 +16,7 @@
 #include <string>
 
 #include "mars/comm/xlogger/xlogger.h"
+#include "mars/comm/xlogger/xloggerbase.h"
 #include "mars/comm/jni/util/scoped_jstring.h"
 #include "mars/comm/jni/util/var_cache.h"
 #include "mars/comm/jni/util/scope_jenv.h"
@@ -28,9 +29,9 @@ DEFINE_FIND_CLASS(KXlog, "com/tencent/mars/xlog/Xlog")
 
 extern "C" {
 
-DEFINE_FIND_STATIC_METHOD(KXlog_appenderOpenWithMultipathWithLevel, KXlog, "appenderOpen", "(IILjava/lang/String;Ljava/lang/String;Ljava/lang/String;)V")
+DEFINE_FIND_STATIC_METHOD(KXlog_appenderOpenWithMultipathWithLevel, KXlog, "appenderOpen", "(IILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/tencent/mars/xlog/Xlog$XLoggerAppInfo;)V")
 JNIEXPORT void JNICALL Java_com_tencent_mars_xlog_Xlog_appenderOpen
-	(JNIEnv *env, jclass, jint level, jint mode, jstring _cache_dir, jstring _log_dir, jstring _nameprefix) {
+	(JNIEnv *env, jclass, jint level, jint mode, jstring _cache_dir, jstring _log_dir, jstring _nameprefix, jobject _appInfo) {
 	if (NULL == _log_dir || NULL == _nameprefix) {
 		return;
 	}
@@ -43,7 +44,36 @@ JNIEXPORT void JNICALL Java_com_tencent_mars_xlog_Xlog_appenderOpen
 
 	ScopedJstring log_dir_jstr(env, _log_dir);
 	ScopedJstring nameprefix_jstr(env, _nameprefix);
-	appender_open_with_cache((TAppenderMode)mode, cache_dir.c_str(), log_dir_jstr.GetChar(), nameprefix_jstr.GetChar());
+
+    jstring platform = (jstring)JNU_GetField(env, _appInfo, "platform", "Ljava/lang/String;").l;
+	jstring osVersion = (jstring)JNU_GetField(env, _appInfo, "osVersion", "Ljava/lang/String;").l;
+	jstring version = (jstring)JNU_GetField(env, _appInfo, "version", "Ljava/lang/String;").l;
+    jstring qid = (jstring)JNU_GetField(env, _appInfo, "qid", "Ljava/lang/String;").l;
+	jstring uid = (jstring)JNU_GetField(env, _appInfo, "uid", "Ljava/lang/String;").l;
+	jstring sid = (jstring)JNU_GetField(env, _appInfo, "sid", "Ljava/lang/String;").l;
+    jstring channelId = (jstring)JNU_GetField(env, _appInfo, "channelId", "Ljava/lang/String;").l;
+
+    ScopedJstring platform_jstr(env, platform);
+	ScopedJstring osVersion_jstr(env, osVersion);
+    ScopedJstring version_jstr(env, version);
+    ScopedJstring qid_jstr(env, qid);
+    ScopedJstring uid_jstr(env, uid);
+	ScopedJstring sid_jstr(env, sid);
+	ScopedJstring channelId_jst(env, channelId);
+
+    XLoggerAppInfo appinfo;
+    appinfo.plat = platform_jstr.GetChar();
+    appinfo.osv = osVersion_jstr.GetChar();
+    appinfo.version = version_jstr.GetChar();
+    appinfo.qid = qid_jstr.GetChar();
+    appinfo.uid = uid_jstr.GetChar();
+    appinfo.sid = sid_jstr.GetChar();
+    appinfo.channelid = channelId_jst.GetChar();
+
+    // MARK
+    // Follow bro lion ==> change init function from appender_open_with_cache to appender_open
+	// appender_open_with_cache((TAppenderMode)mode, cache_dir.c_str(), log_dir_jstr.GetChar(), nameprefix_jstr.GetChar());
+    appender_open((TAppenderMode)mode, log_dir_jstr.GetChar(), nameprefix_jstr.GetChar(), &appinfo);
 	xlogger_SetLevel((TLogLevel)level);
 
 }
