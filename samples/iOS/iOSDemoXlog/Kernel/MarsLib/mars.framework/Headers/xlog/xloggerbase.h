@@ -62,6 +62,7 @@ typedef struct XLoggerAppInfo_t {
     const char* qid;
     const char* uid;
     const char* sid;
+    const char* check;
     const char* channelid;
 }XLoggerAppInfo;
     

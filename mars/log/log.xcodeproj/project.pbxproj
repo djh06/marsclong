@@ -11,6 +11,7 @@
 		4B243A5A1CC101B4006A490F /* appender.cc in Sources */ = {isa = PBXBuildFile; fileRef = 4B243A581CC101B4006A490F /* appender.cc */; };
 		4B243A5B1CC101B4006A490F /* formater.cc in Sources */ = {isa = PBXBuildFile; fileRef = 4B243A591CC101B4006A490F /* formater.cc */; };
 		4BAD09871D34CE8A006BC5B0 /* log_buffer.cc in Sources */ = {isa = PBXBuildFile; fileRef = 4BAD09851D34CE8A006BC5B0 /* log_buffer.cc */; };
+		C98A5D111E5C1590009C4A3A /* md5.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C98A5D0F1E5C1590009C4A3A /* md5.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -33,6 +34,8 @@
 		4B243A591CC101B4006A490F /* formater.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = formater.cc; sourceTree = "<group>"; };
 		4BAD09851D34CE8A006BC5B0 /* log_buffer.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = log_buffer.cc; sourceTree = "<group>"; };
 		4BAD09861D34CE8A006BC5B0 /* log_buffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = log_buffer.h; sourceTree = "<group>"; };
+		C98A5D0F1E5C1590009C4A3A /* md5.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = md5.cpp; sourceTree = "<group>"; };
+		C98A5D101E5C1590009C4A3A /* md5.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = md5.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -50,6 +53,8 @@
 		13811790197552A70007B832 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				C98A5D0F1E5C1590009C4A3A /* md5.cpp */,
+				C98A5D101E5C1590009C4A3A /* md5.h */,
 				4BAD09851D34CE8A006BC5B0 /* log_buffer.cc */,
 				4BAD09861D34CE8A006BC5B0 /* log_buffer.h */,
 				4B243A581CC101B4006A490F /* appender.cc */,
@@ -137,6 +142,7 @@
 			files = (
 				4BAD09871D34CE8A006BC5B0 /* log_buffer.cc in Sources */,
 				4B243A5A1CC101B4006A490F /* appender.cc in Sources */,
+				C98A5D111E5C1590009C4A3A /* md5.cpp in Sources */,
 				4B243A5B1CC101B4006A490F /* formater.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

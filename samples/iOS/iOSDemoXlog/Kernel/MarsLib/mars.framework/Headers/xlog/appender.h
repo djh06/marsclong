@@ -24,8 +24,11 @@
 #include <string>
 #include <vector>
 
+#ifdef ANDROID
+#include "mars/comm/xlogger/xloggerbase.h"
+#else
 extern struct XLoggerAppInfo_t;
-
+#endif
 enum TAppenderMode
 {
     kAppednerAsync,

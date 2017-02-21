@@ -37,12 +37,12 @@
 #endif
 
 
-void log_formater_json(const XLoggerInfo* _info, const char* _logbody, PtrBuffer& _log) {
+void log_formater_json(const XLoggerInfo* _info, const XLoggerAppInfo* _app ,const char* _logbody, PtrBuffer& _log) {
     
     if (_info == NULL) {
         return;
     }
-
+    
     static const char* levelStrings[] = {
         "V",
         "D",  // debug
@@ -98,10 +98,22 @@ void log_formater_json(const XLoggerInfo* _info, const char* _logbody, PtrBuffer
 #endif
         }
         
-        int ret = snprintf((char*)_log.PosPtr(), 1024, "{\"logtype\":\"%s\",\"tt\":\"%s\",\"pid\":%" PRIdMAX ",\"tid\":%" PRIdMAX ",\"tag\":\"%s\",\"filen\":\"%s\",\"funcname\":\"%s\",\"line\":%d,\"content\":\"%s\"}\n",  // **CPPLINT SKIP**
-                           _logbody ? levelStrings[_info->level] : levelStrings[kLevelFatal], temp_time,
+        int ret = -1;
+        
+        if (_app) {
+            
+            ret = snprintf((char*)_log.PosPtr(), 1024, "{\"osv\":\"%s\",\"version\":\"%s\",\"qid\":\"%s\",\"uid\":\"%s\",\"sid\":\"%s\",\"channelid\":\"%s\",\"net\":\"%s\", \"logtype\":\"%s\",\"tt\":\"%s\",\"pid\":%" PRIdMAX ",\"tid\":%" PRIdMAX ",\"tag\":\"%s\",\"filen\":\"%s\",\"funcname\":\"%s\",\"line\":%d,\"content\":\"%s\"}\n",  // **CPPLINT SKIP**
+                           _app->osv ? _app->osv : "",_app->version ? _app->version : "",_app->qid ? _app->qid : "",_app->uid ? _app->uid : "",_app->sid ? _app->sid: "",_app->channelid ? _app->channelid : "","1",_logbody ? levelStrings[_info->level] : levelStrings[kLevelFatal], temp_time,
                            _info->pid, _info->tid, _info->tag ? _info->tag : "",
                            filename, strFuncName, _info->line,_logbody ? _logbody : "error log");
+        }else{
+            
+            ret = snprintf((char*)_log.PosPtr(), 1024, "{\"logtype\":\"%s\",\"tt\":\"%s\",\"pid\":%" PRIdMAX ",\"tid\":%" PRIdMAX ",\"tag\":\"%s\",\"filen\":\"%s\",\"funcname\":\"%s\",\"line\":%d,\"content\":\"%s\"}\n",  // **CPPLINT SKIP**
+                               _logbody ? levelStrings[_info->level] : levelStrings[kLevelFatal], temp_time,
+                               _info->pid, _info->tid, _info->tag ? _info->tag : "",
+                               filename, strFuncName, _info->line,_logbody ? _logbody : "error log");
+        }
+
         assert(0 <= ret);
         _log.Length(_log.Pos() + ret, _log.Length() + ret);
         //      memcpy((char*)_log.PosPtr() + 1, "\0", 1);

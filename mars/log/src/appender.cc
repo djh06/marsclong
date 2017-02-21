@@ -53,6 +53,9 @@
 #include "boost/bind.hpp"
 #include "boost/iostreams/device/mapped_file.hpp"
 #include "boost/filesystem.hpp"
+#include "boost/lexical_cast.hpp"
+#include "boost/algorithm/string/split.hpp"
+#include "boost/algorithm/string/trim.hpp"
 
 #include "mars/comm/thread/lock.h"
 #include "mars/comm/thread/condition.h"
@@ -79,14 +82,15 @@
 
 
 #include "log_buffer.h"
+#include "md5.h"
 
 #define LOG_EXT "xlog"
 #define LOG_EXTENSION ".timi"
-#define LOG_SERVER_URL "http://api.nohttp.net/upload"
+#define LOG_SERVER_URL "http://dot.panda.tv/reports?"
 
 extern void log_formater(const XLoggerInfo* _info, const char* _logbody, PtrBuffer& _log);
 extern void ConsoleLog(const XLoggerInfo* _info, const char* _log);
-extern void log_formater_json(const XLoggerInfo* _info, const char* _logbody, PtrBuffer& _log);
+extern void log_formater_json(const XLoggerInfo* _info, const XLoggerAppInfo* _app,const char* _logbody, PtrBuffer& _log);
 
 static TAppenderMode sg_mode = kAppednerAsync;
 
@@ -193,28 +197,21 @@ static void __make_logfilename(const timeval& _tv, const std::string& _logdir, c
     _filepath[_len - 1] = '\0';
 }
 
-static std::string __make_uploadURL(){
+static std::string __make_uploadURL(long flength){
     
     std:: string blank = std::string("");
+    std::string dot = std::string(".");
     std::string url = std::string(LOG_SERVER_URL);
     std::string biz = sg_app.biz == NULL ? blank :std::string(sg_app.biz);
     std::string plat = sg_app.plat == NULL ? blank :  std::string(sg_app.plat);
-    std::string qid = sg_app.qid == NULL ? blank : std::string(sg_app.qid);
-    std::string sid = sg_app.sid == NULL ? blank : std::string(sg_app.sid);
-    std::string uid = sg_app.uid == NULL ? blank : std::string(sg_app.uid);
-    std::string version = sg_app.version == NULL ? blank : std::string(sg_app.version);
-    std::string osv =  sg_app.osv == NULL ? blank : std::string(sg_app.osv);
-    std::string channelid = sg_app.channelid == NULL ? blank : std::string(sg_app.channelid);
+    std::string check = sg_app.check == NULL ? blank : std::string(sg_app.check);
+    std::string md5_s = biz+dot+check+dot+plat+dot+boost::lexical_cast<std::string>(flength);
+    std::string sign = MD5(MD5(md5_s.c_str()).toStr().c_str()).toStr();
     
     url += biz.length() <= 0 ? "" : "biz="+ std::string(curl_escape(biz.c_str(), biz.length()));
     url += plat.length() <= 0 ? "" : "&plat="+ std::string(curl_escape(plat.c_str(), plat.length()));
-    url += qid.length() <= 0 ? "" : "&qid="+ std::string(curl_escape(qid.c_str(), qid.length()));
-    url += sid.length() <= 0 ? "" : "&sid="+ std::string(curl_escape(sid.c_str(), sid.length()));
-;
-    url += uid.length() <= 0 ? "" : "&uid="+ std::string(curl_escape(uid.c_str(), uid.length()));
-    url += version.length() <= 0 ? "" : "&version="+ std::string(curl_escape(version.c_str(), version.length()));
-    url += osv.length() <= 0 ? "" : "&osv="+ std::string(curl_escape(osv.c_str(), osv.length()));
-    url += channelid.length() <= 0 ? "" : "&channelid="+ std::string(curl_escape(channelid.c_str(), channelid.length()));
+    url += check.length() <= 0? "" : "&check="+std::string(curl_escape(check.c_str(), check.length()));
+    url += sign.length() <= 0 ? "" : "&sign="+sign;
     return url;
 }
 
@@ -444,6 +441,28 @@ static bool __writefile(const void* _data, size_t _len, FILE* _file) {
 }
 
 
+static std::string __make_json_array(const char* content){
+
+    std::string rawstring = std::string(content);
+    std::vector<std::string> key_val;
+    mars_boost::split(key_val, rawstring, mars_boost::is_any_of("\n"));
+    
+    std::string jsonarray;
+    for(auto string : key_val){
+        if (jsonarray.length() == 0 ) {
+            jsonarray+="[";
+        }else{
+            
+            jsonarray+= string.length() > 0 ? ",":"";
+        }
+        jsonarray+= string;
+    }
+    jsonarray+="]";
+    
+    return jsonarray;
+    
+}
+
 static bool __make_curl_handel(std::string filepath){
     
     if (boost::filesystem::exists(filepath)) {
@@ -480,13 +499,16 @@ static bool __make_curl_handel(std::string filepath){
         bool succuss = false;
         if(curl) {
             
-            std::string url =  __make_uploadURL();
-
+            std::string jsonarray =__make_json_array(postfile);
+            long flength = jsonarray.length();
+            std::string url =  __make_uploadURL(flength);
+            printf(" url = %s",url.c_str());
+            
             //LOGD("testxlog","<======= ur = %s ",url.c_str());
             
             curl_easy_setopt(curl, CURLOPT_URL,LOG_SERVER_URL);
-            curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postfile);
-            curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)strlen(postfile));
+            curl_easy_setopt(curl, CURLOPT_POSTFIELDS,jsonarray.c_str());
+            curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE,flength);
             curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
             curl_easy_setopt(curl, CURLOPT_TIMEOUT, 8);
     
@@ -768,13 +790,13 @@ static void __appender_async(const XLoggerInfo* _info, const char* _log) {
     
     char temp[16*1024] = {0};       //tell perry,ray if you want modify size.
     PtrBuffer log_buff(temp, 0, sizeof(temp));
-    log_formater_json(_info, _log, log_buff);
+    log_formater_json(_info,&sg_app ,_log, log_buff);
     
 //    printf("content = %s",log_buff.Ptr());
 
     if (sg_log_buff->GetData().Length() >= kBufferBlockLength*4/5) {
-       int ret = snprintf(temp, sizeof(temp), "[F][ sg_buffer_async.Length() >= BUFFER_BLOCK_LENTH*4/5, len: %d\n", (int)sg_log_buff->GetData().Length());
-       log_buff.Length(ret, ret);
+//       int ret = snprintf(temp, sizeof(temp), "[F][ sg_buffer_async.Length() >= BUFFER_BLOCK_LENTH*4/5, len: %d\n", (int)sg_log_buff->GetData().Length());
+//       log_buff.Length(ret, ret);
     }
 
     if (!sg_log_buff->Write(log_buff.Ptr(), (unsigned int)log_buff.Length())) return;
@@ -940,7 +962,7 @@ void appender_open(TAppenderMode _mode, const char* _dir, const char* _nameprefi
     }
     
     if (appinfo) {
-        // sg_app.biz = appinfo->biz;
+        sg_app.biz = appinfo->biz;
         sg_app.osv = appinfo->osv;
         sg_app.plat = appinfo->plat;
         sg_app.qid = appinfo->qid;
@@ -948,6 +970,8 @@ void appender_open(TAppenderMode _mode, const char* _dir, const char* _nameprefi
         sg_app.uid = appinfo->uid;
         sg_app.channelid = appinfo->channelid;
         sg_app.version = appinfo->version;
+        sg_app.check = appinfo->check;
+        sg_app.channelid = appinfo->channelid;
     }
     
     xlogger_SetAppender(&xlogger_appender);
