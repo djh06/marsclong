@@ -199,6 +199,11 @@ static void __make_logfilename(const timeval& _tv, const std::string& _logdir, c
 
 static std::string __make_uploadURL(long flength){
     
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    
+    std::string t =  boost::lexical_cast<std::string>(tv.tv_usec);
+    
     std:: string blank = std::string("");
     std::string dot = std::string(".");
     std::string url = std::string(LOG_SERVER_URL);
@@ -212,6 +217,7 @@ static std::string __make_uploadURL(long flength){
     url += plat.length() <= 0 ? "" : "&plat="+ std::string(curl_escape(plat.c_str(), plat.length()));
     url += check.length() <= 0? "" : "&check="+std::string(curl_escape(check.c_str(), check.length()));
     url += sign.length() <= 0 ? "" : "&sign="+sign;
+    url += "&t="+t;
     return url;
 }
 
@@ -441,13 +447,15 @@ static bool __writefile(const void* _data, size_t _len, FILE* _file) {
 }
 
 
-static std::string __make_json_array(const char* content){
+static std::string __make_json_array(const char* content ,int &arrcount){
 
     std::string rawstring = std::string(content);
     std::vector<std::string> key_val;
     mars_boost::split(key_val, rawstring, mars_boost::is_any_of("\n"));
     
+    key_val.pop_back();
     std::string jsonarray;
+    arrcount = (int)key_val.size();
     for(auto string : key_val){
         if (jsonarray.length() == 0 ) {
             jsonarray+="[";
@@ -498,20 +506,18 @@ static bool __make_curl_handel(std::string filepath){
         curl = curl_easy_init();
         bool succuss = false;
         if(curl) {
-            
-            std::string jsonarray =__make_json_array(postfile);
-            long flength = jsonarray.length();
-            std::string url =  __make_uploadURL(flength);
+            int count = 0;
+            std::string jsonarray =__make_json_array(postfile,count);
+            std::string poststring = "data="+jsonarray;
+            std::string url =  __make_uploadURL(count);
             printf(" url = %s",url.c_str());
             
-            //LOGD("testxlog","<======= ur = %s ",url.c_str());
-            
-            curl_easy_setopt(curl, CURLOPT_URL,LOG_SERVER_URL);
-            curl_easy_setopt(curl, CURLOPT_POSTFIELDS,jsonarray.c_str());
-            curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE,flength);
+            curl_easy_setopt(curl, CURLOPT_URL,url.c_str());
+            curl_easy_setopt(curl, CURLOPT_POST,1);
+            curl_easy_setopt(curl, CURLOPT_COPYPOSTFIELDS  , poststring.c_str());
             curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
             curl_easy_setopt(curl, CURLOPT_TIMEOUT, 8);
-    
+            
             res = curl_easy_perform(curl);
 
             if(res == CURLE_OK) {
